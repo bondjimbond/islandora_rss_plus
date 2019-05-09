@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * The main Islandora RSS Plus module file.
+ */
+
+/**
+ * Implements hook_islandora_solr_config_rss_item_post_render__alter().
+ */
+function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$rendered_item, &$doc) {
+  $item = new DOMDocument();
+  $item->preserveWhiteSpace = FALSE;
+  $item->formatOutput = TRUE;
+  $item->loadXML($rendered_item);
+  $pid = $doc['PID'];
+
+  $results = islandora_rss_plus_get_fields($pid);
+  $fragment = array();
+  foreach($results AS $result) {
+  // does $fragment become an array?
+      $rights = $result['solr_doc']['dc.rights'];
+      $subjects = $result['solr_doc']['dc.subject'];
+    if (!empty($rights)) {
+      foreach ($rights AS $right) {
+        $fragment[] = "<rights>" . $right . "</rights>";
+      }
+    }
+    if (!empty($subjects)) {
+      foreach ($subjects AS $subject) {
+        $fragment[] = "<subject> " . $subject . "</subject>";
+      }
+    }
+  }
+//  $fragment = "<crap>Just a test</crap>";
+  $full_fragment = '';
+  foreach ($fragment AS $part) {
+    $full_fragment = $full_fragment . $part;
+  }
+  $frag = $item->createDocumentFragment();
+  $frag->appendXML($full_fragment);
+  $item->documentElement->appendChild($frag);
+  // Goal: Grab the appropriate Solr fields from the object and inject them into the rendered_item
+  
+  // Would do some manipulation of the DOM before this...
+  $rendered_item = $item->saveXML($item->documentElement);
+
+
+}
+
+
+function islandora_rss_plus_get_fields($pid) {
+  // Gets the rightsstatements.org URI from the configured Solr field.
+  $results = array();
+  $qp = new islandoraSolrQueryProcessor();
+  $qp->buildQuery(format_string('@field:"@pid"', array(
+    '@field' => 'PID',
+    '@pid' =>"{$pid}")
+  ));
+  $rights_field = 'dc.rights';
+  $namespace_field = 'PID_namespace_ss';
+  $subject_field = 'dc.subject';
+
+  $qp->solrParams['fl'] = implode(', ', array(
+    'PID',
+    $rights_field,
+    $namespace_field,
+    $subject_field,
+  ));
+  $qp->solrStart = 0;
+  $qp->solrLimit = 100000;
+  $qp->executeQuery(FALSE);
+
+
+  $response = $qp->islandoraSolrResult['response']['objects'];
+  return $response;
+}
+
