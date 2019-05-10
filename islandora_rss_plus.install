@@ -1,0 +1,16 @@
+<?php
+/**
+ * @file
+ * Installation hooks for Islandora RSS Plus.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function islandora_rss_plus_uninstall() {
+  $vars = array(
+    islandora_rss_plus_field_subject,
+    islandora_rss_plus_field_rights,
+  );
+  array_walk($vars, 'variable_del');
+}
