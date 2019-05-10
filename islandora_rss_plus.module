@@ -6,6 +6,23 @@
  */
 
 /**
+ * Implements hook_menu().
+ */
+function islandora_rss_plus_menu() {
+  return array(
+    'admin/islandora/tools/rss-plus' => array(
+      'title' => 'Islandora RSS Plus',
+      'description' => 'Configure Solr fields for RSS Plus',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('islandora_rss_plus_admin_form'),
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'includes/admin.form.inc',
+    ),
+  );
+}
+
+/**
  * Implements hook_islandora_solr_config_rss_item_post_render__alter().
  */
 function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$rendered_item, &$doc) {
@@ -17,10 +34,12 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
 
   $results = islandora_rss_plus_get_fields($pid);
   $fragment = array();
+  $rights_field = variable_get('islandora_rss_plus_field_rights', 'dc.rights');
+  $subject_field = variable_get('islandora_rss_plus_field_subject', 'dc.subject');
   foreach($results AS $result) {
   // does $fragment become an array?
-      $rights = $result['solr_doc']['dc.rights'];
-      $subjects = $result['solr_doc']['dc.subject'];
+      $rights = $result['solr_doc'][$rights_field];
+      $subjects = $result['solr_doc'][$subject_field];
     if (!empty($rights)) {
       foreach ($rights AS $right) {
         $fragment[] = "<rights>" . $right . "</rights>";
@@ -28,7 +47,7 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
     }
     if (!empty($subjects)) {
       foreach ($subjects AS $subject) {
-        $fragment[] = "<subject> " . $subject . "</subject>";
+        $fragment[] = "<subject>" . $subject . "</subject>";
       }
     }
   }
