@@ -31,15 +31,18 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
   $item->formatOutput = TRUE;
   $item->loadXML($rendered_item);
   $pid = $doc['PID'];
-
   $results = islandora_rss_plus_get_fields($pid);
   $fragment = array();
   $rights_field = variable_get('islandora_rss_plus_field_rights', 'dc.rights');
   $subject_field = variable_get('islandora_rss_plus_field_subject', 'dc.subject');
   foreach($results AS $result) {
-  // does $fragment become an array?
+    // does $fragment become an array?
+    if (!empty($result['solr_doc'][$rights_field])) {
       $rights = $result['solr_doc'][$rights_field];
+    }
+    if (!empty($result['solr_doc'][$subject_field])) {
       $subjects = $result['solr_doc'][$subject_field];
+    }
     if (!empty($rights)) {
       foreach ($rights AS $right) {
         $fragment[] = "<rights>" . $right . "</rights>";
