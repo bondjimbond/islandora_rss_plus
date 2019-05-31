@@ -54,19 +54,20 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
       }
     }
   }
-//  $fragment = "<crap>Just a test</crap>";
-  $full_fragment = '';
-  foreach ($fragment AS $part) {
-    $full_fragment = $full_fragment . $part;
-  }
-  $frag = $item->createDocumentFragment();
-  $frag->appendXML($full_fragment);
-  $item->documentElement->appendChild($frag);
-  // Goal: Grab the appropriate Solr fields from the object and inject them into the rendered_item
+    $full_fragment = '';
+    foreach ($fragment AS $part) {
+      $full_fragment = $full_fragment . $part;
+    }
+  if (!empty($full_fragment)) {
+    $full_fragment=preg_replace('/&(?!#?[a-z0-9]+;)/', '&amp;', $full_fragment);
+    $frag = $item->createDocumentFragment();
+    $frag->appendXML($full_fragment);
+    $item->documentElement->appendChild($frag);
+    // Goal: Grab the appropriate Solr fields from the object and inject them into the rendered_item
   
-  // Would do some manipulation of the DOM before this...
-  $rendered_item = $item->saveXML($item->documentElement);
-
+    // Would do some manipulation of the DOM before this...
+    $rendered_item = $item->saveXML($item->documentElement);
+  }
 
 }
 
