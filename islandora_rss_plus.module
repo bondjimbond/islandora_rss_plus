@@ -31,14 +31,21 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
   $item->formatOutput = TRUE;
   $item->loadXML($rendered_item);
   $pid = $doc['PID'];
-  $results = islandora_rss_plus_get_fields($pid);
-  $fragment = array();
   $rights_field = variable_get('islandora_rss_plus_field_rights', 'dc.rights');
   $subject_field = variable_get('islandora_rss_plus_field_subject', 'dc.subject');
+  $publisher_field = variable_get('islandora_rss_plus_field_publisher', 'dc.publisher');
+  $language_field = variable_get('islandora_rss_plus_field_language', 'dc.language');
+  $results = islandora_rss_plus_get_fields($pid, $rights_field, $language_field, $subject_field, $publisher_field);
+  $fragment = array();
   foreach($results AS $result) {
-    // does $fragment become an array?
     if (!empty($result['solr_doc'][$rights_field])) {
       $rights = $result['solr_doc'][$rights_field];
+    }
+    if (!empty($result['solr_doc'][$language_field])) {
+      $languages = $result['solr_doc'][$language_field];
+    }
+    if (!empty($result['solr_doc'][$publisher_field])) {
+      $publishers = $result['solr_doc'][$publisher_field];
     }
     if (!empty($result['solr_doc'][$subject_field])) {
       $subjects = $result['solr_doc'][$subject_field];
@@ -51,6 +58,16 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
     if (!empty($subjects)) {
       foreach ($subjects AS $subject) {
         $fragment[] = "<subject>" . $subject . "</subject>";
+      }
+    }
+    if (!empty($publishers)) {
+      foreach ($publishers AS $publisher) {
+        $fragment[] = "<publisher>" . $publisher . "</publisher>";
+      }
+    }
+    if (!empty($languages)) {
+      foreach ($languages AS $language) {
+        $fragment[] = "<language>" . $language . "</language>";
       }
     }
   }
@@ -72,7 +89,7 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
 }
 
 
-function islandora_rss_plus_get_fields($pid) {
+function islandora_rss_plus_get_fields($pid, $rights_field, $language_field, $subject_field, $publisher_field) {
   // Gets the rightsstatements.org URI from the configured Solr field.
   $results = array();
   $qp = new islandoraSolrQueryProcessor();
@@ -80,15 +97,13 @@ function islandora_rss_plus_get_fields($pid) {
     '@field' => 'PID',
     '@pid' =>"{$pid}")
   ));
-  $rights_field = 'dc.rights';
-  $namespace_field = 'PID_namespace_ss';
-  $subject_field = 'dc.subject';
-
   $qp->solrParams['fl'] = implode(', ', array(
     'PID',
     $rights_field,
     $namespace_field,
     $subject_field,
+    $publisher_field,
+    $language_field,
   ));
   $qp->solrStart = 0;
   $qp->solrLimit = 100000;
