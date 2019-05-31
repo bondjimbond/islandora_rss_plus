@@ -91,6 +91,7 @@ function islandora_rss_plus_islandora_solr_config_rss_item_post_render_alter(&$r
 
 function islandora_rss_plus_get_fields($pid, $rights_field, $language_field, $subject_field, $publisher_field) {
   // Gets the rightsstatements.org URI from the configured Solr field.
+  $namespace_field = 'PID_namespace_ss';
   $results = array();
   $qp = new islandoraSolrQueryProcessor();
   $qp->buildQuery(format_string('@field:"@pid"', array(
